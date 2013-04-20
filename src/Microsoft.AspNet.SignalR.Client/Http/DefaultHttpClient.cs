@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR.Infrastructure;
 
 namespace Microsoft.AspNet.SignalR.Client.Http
 {
@@ -23,11 +24,23 @@ namespace Microsoft.AspNet.SignalR.Client.Http
         [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "To Add")]
         public Task<IResponse> Get(string url, Action<IRequest> prepareRequest)
         {
+            var disposer = new Disposer();
             var cts = new CancellationTokenSource();
-            var handler = new DefaultHttpHandler(prepareRequest, cts.Cancel);
+
+            var handler = new DefaultHttpHandler(prepareRequest, () =>
+            {
+                cts.Cancel();
+                disposer.Dispose();
+            });
+
             var client = new HttpClient(handler);
+
             return client.GetAsync(new Uri(url), HttpCompletionOption.ResponseHeadersRead, cts.Token)
-                .Then(responseMessage => (IResponse)new HttpResponseMessageWrapper(responseMessage));
+                .Then(responseMessage =>
+                {
+                    disposer.Set(responseMessage);
+                    return (IResponse)new HttpResponseMessageWrapper(responseMessage);
+                });
         }
 
         /// <summary>

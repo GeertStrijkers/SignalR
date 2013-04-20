@@ -44,6 +44,12 @@ namespace Microsoft.AspNet.SignalR.Tests.FunctionalTests.Infrastructure
                     Sources.Add((TraceSource)webProperty.GetValue(null));
                 }
 
+                var httpProperty = _loggingType.GetProperty("Http", BindingFlags.NonPublic | BindingFlags.Static);
+                if (httpProperty != null)
+                {
+                    Sources.Add((TraceSource)httpProperty.GetValue(null));
+                }
+
                 var socketsProperty = _loggingType.GetProperty("Sockets", BindingFlags.NonPublic | BindingFlags.Static);
                 if (socketsProperty != null)
                 {
