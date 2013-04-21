@@ -44,6 +44,10 @@
 
                 connection.log("Connecting to websocket endpoint '" + url + "'");
                 connection.socket = new window.WebSocket(url);
+                if (connection.socket.url === undefined) {
+                    onFailed();
+                    return;
+                }
                 connection.socket.onopen = function () {
                     opened = true;
                     connection.log("Websocket opened");
